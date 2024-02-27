@@ -2,7 +2,10 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
-const { userService } = require('../services');
+const { FileQueue } = require("./../models")
+const { userService,imageService } = require('../services');
+const uploadMultipleFiles = imageService.array("uploader")
+const Queue = require('bull');
 
 const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -33,6 +36,60 @@ const deleteUser = catchAsync(async (req, res) => {
   await userService.deleteUserById(req.params.userId);
   res.status(httpStatus.NO_CONTENT).send();
 });
+const uploadQueueFile=(data)=>{
+  return new Promise((resolve,reject)=>{
+    resolve(data)
+    console.log("data ===>",data)
+  })
+  
+}
+const uploadFiles = catchAsync(async (req, res) => {
+  uploadMultipleFiles(req, res, async (err) => {
+    try {
+      if (err) {
+        return res.status(httpStatus.BAD_REQUEST).send({ message: err.message });
+      }
+      let files = req.files
+      console.log("files ",files)
+      if(!files) {
+        return res.status(httpStatus.BAD_REQUEST).send({ message: "No files are selected" });
+      }
+      if(files.length === 0) {
+        return res.status(httpStatus.BAD_REQUEST).send({ message: "No files are selected" });  
+      }
+      const uploadFilesQueue = new Queue('uploadFiles', {
+        redis: {
+          host: '127.0.0.1',
+          port: 6379,
+          password: 'root'
+        }
+      });
+      const options = {
+        delay: 60000, // 1 min in ms
+        attempts: 2
+      };
+      for(let i=0;i<files.length;i++) {
+        let file = files[i]
+        let dbFile = await FileQueue.create({
+          name:file.orignalName
+        })
+        let data = {
+           file:files[i],
+           id:dbFile._id
+        }
+        uploadFilesQueue.add(data, options);
+      }
+      uploadFilesQueue.process(async job => { 
+        return await uploadQueueFile(job.data); 
+      });
+      let data = await FileQueue.find({})
+      res.status(httpStatus.OK).send({ message: "Files are uploaded",data });
+    } catch (error) {
+      res.status(httpStatus.BAD_REQUEST).send({ message: error.message });
+    }
+
+  });
+})
 
 module.exports = {
   createUser,
@@ -40,4 +97,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
-};
+  uploadFiles
+}
