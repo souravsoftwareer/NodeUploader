@@ -13,7 +13,7 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
-
+const path = require('path')
 const app = express();
 
 if (config.env !== 'test') {
@@ -53,10 +53,21 @@ if (config.env === 'production') {
 // v1 api routes
 app.use('/v1', routes);
 
+app.set('view engine', 'ejs');
+
+// Set the directory for views
+app.set('views', path.join(__dirname, 'views'));
+app.set('/public', path.join(__dirname, '/public'));
+
+app.get('/', (req, res) => {
+  // Render the view file named 'index.ejs'
+  res.render('uploader', { title: 'Hello, World!', message: 'This is a message from Node.js!' });
+});
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
 });
+
 
 // convert error to ApiError, if needed
 app.use(errorConverter);
