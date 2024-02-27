@@ -79,6 +79,7 @@ const uploadFiles = catchAsync(async (req, res) => {
         }
         uploadFilesQueue.add(data, options);
       }
+      
       uploadFilesQueue.process(async job => { 
         return await uploadQueueFile(job.data); 
       });
