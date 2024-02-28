@@ -96,11 +96,25 @@ const uploadFiles = catchAsync(async (req, res) => {
   });
 })
 
+const getFiles = catchAsync(async (req, res) => {
+  let data = await FileQueue.find({})
+  
+  res.status(httpStatus.OK).send({ status:data.length>0,message: data.length>0?"Files are found":"No files found",data });
+})
+
+const deleteFiles = catchAsync(async (req, res) => {
+  await FileQueue.deleteMany({})
+  
+  res.status(httpStatus.OK).send({ status:true,message: "Files are cleared" });
+})
+
 module.exports = {
   createUser,
   getUsers,
   getUser,
   updateUser,
   deleteUser,
-  uploadFiles
+  uploadFiles,
+  getFiles,
+  deleteFiles
 }
