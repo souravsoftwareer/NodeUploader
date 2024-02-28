@@ -42,8 +42,9 @@ const uploadQueueFile=(data)=>{
     console.log("data ===>",data)
     let file = data.file
     let id = data.id
-    let media = await s3Service.uploadImageToS3(file)
-    console.log("media ===> ",media)
+    let response = await s3Service.uploadImageToS3(file)
+    await FileQueue.updateOne({ _id:id },{ media:response.data.Key,status:'uploaded' })
+    console.log("media ===> ",response)
   })
   
 }
