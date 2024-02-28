@@ -3,7 +3,7 @@ const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { FileQueue } = require("./../models")
-const { userService,imageService } = require('../services');
+const { userService,imageService,s3Service } = require('../services');
 const uploadMultipleFiles = imageService.array("uploader")
 const Queue = require('bull');
 
@@ -37,9 +37,13 @@ const deleteUser = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 const uploadQueueFile=(data)=>{
-  return new Promise((resolve,reject)=>{
+  return new Promise(async(resolve,reject)=>{
     resolve(data)
     console.log("data ===>",data)
+    let file = data.file
+    let id = data.id
+    let media = await s3Service.uploadImageToS3(file)
+    console.log("media ===> ",media)
   })
   
 }
@@ -60,8 +64,7 @@ const uploadFiles = catchAsync(async (req, res) => {
       const uploadFilesQueue = new Queue('uploadFiles', {
         redis: {
           host: '127.0.0.1',
-          port: 6379,
-          password: 'root'
+          port: 6379
         }
       });
       const options = {

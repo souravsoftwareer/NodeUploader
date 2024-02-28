@@ -61,4 +61,10 @@ module.exports = {
     },
     from: envVars.EMAIL_FROM,
   },
+  s3:{
+    AccessKeyId:process.env.AccessKeyId,
+    SecretAccessKey:process.env.SecretAccessKey,
+    Region:process.env.Region,
+    Bucket:process.env.Bucket,
+  },
 };

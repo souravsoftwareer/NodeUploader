@@ -10,6 +10,7 @@ const s3 = new aws.S3({
 })
 
 const uploadImageToS3 = async (file) => {
+  
   return new Promise(async (resolve, reject) => {
     const fileExtension = path.extname(file?.originalname)
     let fileName = Date.now().toString() + fileExtension;
@@ -26,7 +27,7 @@ const uploadImageToS3 = async (file) => {
       Bucket: config.s3.Bucket,
       ContentType: file?.mimetype,
       Key: filePath,
-      Body: file?.buffer,
+      Body: Buffer.from(file.buffer.data),
     }
 
     s3.upload(params, async (error, data) => {
