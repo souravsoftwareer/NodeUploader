@@ -69,7 +69,7 @@ const uploadFiles = catchAsync(async (req, res) => {
         }
       });
       const options = {
-        delay: 60000, // 1 min in ms
+        delay: 600, // 1 min in ms
         attempts: 2
       };
       for(let i=0;i<files.length;i++) {
